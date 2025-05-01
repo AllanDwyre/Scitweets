@@ -1,4 +1,4 @@
-# Ignore all top-level directories (like test/dir, unrelated dir ...)
+# Ignore all top-level directories (like test/ venv/, unrelated dir ...)
 /*/
 
 # But not the src/ directory
