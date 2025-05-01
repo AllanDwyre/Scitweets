@@ -1,0 +1,5 @@
+# Ignore all top-level directories (like test/dir, unrelated dir ...)
+/*/
+
+# But not the src/ directory
+!/src/
