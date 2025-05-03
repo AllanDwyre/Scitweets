@@ -1,0 +1,20 @@
+{
+	"result_dir": "results",
+	"random_state": 18,
+	"test_ratio": 0.2,
+	"Step1": {
+		"model": {},
+		"vectorizer": {
+			"TF-IDF": {
+				"ngrams": "(1,4)",
+				"max_features": 500
+			},
+			"BoW": {
+				"ngrams": "(1,4)",
+				"max_features": 500
+			}
+		}
+	},
+	"Step2": {},
+	"Step3": {}
+}

@@ -1,5 +1,8 @@
 # Ignore all top-level directories (like test/ venv/, unrelated dir ...)
 /*/
 
-# But not the src/ directory
+__pycache__
+
 !/src/
+!/results/
+!/static/
