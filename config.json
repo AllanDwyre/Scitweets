@@ -1,9 +1,43 @@
 {
-	"result_dir": "results",
+	"result_dir": "../../results",
+	"static_dir": "../../static",
 	"random_state": 18,
 	"test_ratio": 0.2,
 	"Step1": {
-		"model": {},
+		"models": {
+			"NB": {
+				"alpha": 0.37913375113169984,
+				"vectorizer": {
+					"vector_type": "BoW",
+					"ngram_range": "(1,2)",
+					"min_df": 2,
+					"max_features": 5000
+				}
+			},
+			"RandomForest": {
+				"n_estimators": 223,
+				"max_depth": 14,
+				"min_samples_split": 4,
+				"min_samples_leaf": 1,
+				"vectorizer": {
+					"vector_type": "BoW",
+					"ngram_range": "(1,3)",
+					"min_df": 4,
+					"max_features": 5000
+				}
+			},
+			"LogisticRegression": {
+				"C": 4.602421202481325,
+				"penalty": "l2",
+				"solver": "saga",
+				"vectorizer": {
+					"vector_type": "TF-IDF",
+					"ngram_range": "(1,1)",
+					"min_df": 1,
+					"max_features": 10000
+				}
+			}
+		},
 		"vectorizer": {
 			"TF-IDF": {
 				"ngrams": "(1,4)",

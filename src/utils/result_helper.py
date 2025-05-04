@@ -11,30 +11,30 @@ def slugify(text: str) -> str:
 	text = re.sub(r'[^a-zA-Z0-9]+', '_', text).strip('_').lower()
 	return text
 
-def save_result(title: str, description: str, fig: plt.Figure, output_dir: str = "results"):
-	# 1. Timestamped directory
+def save_result(title: str, description: str, fig: plt.Figure, output_dir: str = "results", static_dir: str = "static"):
+	os.makedirs(output_dir, exist_ok=True)
+	os.makedirs(static_dir, exist_ok=True)
+
 	timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-	save_path = os.path.join(output_dir, timestamp)
-	os.makedirs(save_path, exist_ok=True)
 
 	# 2. Format image filename from title
 	slug = slugify(title)
-	img_filename = f"{slug}_plot.png" # TODO add path
-	img_path = os.path.join(save_path, img_filename)
+	img_filename = f"{slug}_plot.png"
+	img_path = os.path.join(static_dir, "images", img_filename)
 	fig.savefig(img_path)
 
 	# 3. Write markdown report
-	md_path = os.path.join(save_path, "report.md")
+	md_path = os.path.join(output_dir, f"{slug}.md")
 	with open(md_path, "w", encoding="utf-8") as f:
 		f.write(f"# {title}\n")
 		f.write(f"**Date**: {timestamp}\n\n")
 		f.write(f"## Description\n{description}\n\n")
-		f.write(f"## Visualisation\n![{title}]({img_filename})\n")
+		f.write(f"## Visualisation\n![{title}]({img_path})\n")
 
-	print(f"✅ Results saved to: {save_path}")
+	print(f"✅ Results saved to: {output_dir}")
 
 
-def display_result(predicted_y, true_y ):
+def display_result(predicted_y, true_y):
 	fig, axes = plt.subplots(1, 2, figsize=(12, 6))
 	cm = confusion_matrix(true_y, predicted_y)
 	sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=["Non science related", "Science related"],
@@ -53,4 +53,4 @@ def display_result(predicted_y, true_y ):
 
 	plt.tight_layout()
 	plt.show()
-	return cm, class_report
+	return fig

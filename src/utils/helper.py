@@ -20,8 +20,6 @@ def print_color(text: str, type: str) -> None:
 	start_color, icon = types.get(type, ("", ""))
 	print(icon, f"{start_color}{text}{reset}")
 
-
-
 from dataclasses import dataclass, field
 from typing import Optional, Tuple, Dict, Any
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
@@ -39,19 +37,92 @@ class VectorizerConfig:
 	ngrams: Optional[Tuple[int, int]] = (1,1)
 	max_features: int = None
 
+@dataclass
+class Model:
+	data		: Dict[str, Any]
+
+	def get_config(self, config_name):
+		return self.data.get(config_name)
+		
+	def get_vectorizer(self):
+		vectorizer : Dict[str, Any] = self.data.get("vectorizer")
+
+		if not vectorizer:
+			print_color("No vectorizer found", "warning")
+			return None
+		
+		ngrams = parse_ngram_range(vectorizer.get("ngram_range", "(1,2)"))
+		max_features = vectorizer.get("max_features", 1000)
+
+		if(vectorizer.get("vector_type") == "BoW"):
+			return CountVectorizer(ngram_range = ngrams, max_features = max_features)
+		return TfidfVectorizer(ngram_range = ngrams, max_features = max_features)
 
 @dataclass
-class Step1Config:
-	result_dir: str
+class StepConfig:
+	config_path	: str
+	data		: Dict[str, Any]
+	result_dir	: str
+	static_dir	: str
 	random_state: int
-	test_ratio: float
-	tf_idf: VectorizerConfig
-	bow: VectorizerConfig
+	test_ratio	: float
+	tf_idf		: VectorizerConfig
+	bow			: VectorizerConfig
 
-	def get_bow(self):
+
+	def get_model(self, model_name) -> Model | None:
+		model_data = self.data.get("models").get(model_name)
+		if not model_data:
+			print_color("No model of this name found", "warning")
+			return None
+		
+		return Model(data=model_data)
+	
+	def save_model(self, model_name: str, flat_model_data: Dict[str, Any]):
+		# * 1. Conversion du flat a structurer
+		ngram_map = {
+			'unigram': (1, 1),
+			'bigram': (1, 2),
+			'trigram': (1, 3),
+			'quadrugram': (1, 4)
+		}
+		vectorizer_keys = {"ngram_range", "min_df", "max_features"}
+		vectorizer_data = {}
+		model_params = {}
+
+		for key, value in flat_model_data.items():
+			if key in vectorizer_keys:
+				if key == "ngram_range":
+					# Convertir en tuple via mapping
+					value = ngram_map.get(value, (1, 1))
+				vectorizer_data[key] = value
+			else:
+				model_params[key] = value
+
+		model_params["vectorizer"] = vectorizer_data
+
+		# * 2. Introduction du nouveau model dans la structure local (Step1)
+		if "models" not in self.data:
+			self.data["models"] = {}
+
+		self.data["models"][model_name] = model_params
+
+		# * 3. Introduction du nouveau model dans la structure global (fulljson)
+		with open(self.config_path, 'r') as f:
+			full_config = json.load(f)
+
+		if "Step1" not in full_config:
+			full_config["Step1"] = {}
+		full_config["Step1"]["models"] = self.data["models"]
+
+		# * 4. On réecrit tout le fichier pour save le model
+		with open(self.config_path, 'w') as f:
+			json.dump(full_config, f, indent=4)
+
+	def get_default_bow(self):
 		return CountVectorizer(ngram_range = self.tf_idf.ngrams, max_features = self.tf_idf.max_features)
 	
-	def get_tf_id(self):
+	def get_default_tf_id(self):
 		return TfidfVectorizer(ngram_range = self.tf_idf.ngrams, max_features = self.tf_idf.max_features)
 		
 
@@ -69,16 +140,17 @@ class ConfigLoader:
 			raise FileNotFoundError(f"Config file not found at {cls.config_path}")
 
 	@classmethod
-	def load_step1(cls) -> Step1Config:
-		cls.load_json()
+	def load_step1(self) -> StepConfig:
+		self.load_json()
 
 		general = {
-			"result_dir": cls.config_data.get("result_dir", "results"),
-			"random_state": cls.config_data.get("random_state", 42),
-			"test_ratio": cls.config_data.get("test_ratio", 0.2),
+			"result_dir": self.config_data.get("result_dir", "results"),
+			"static_dir": self.config_data.get("static_dir", "static"),
+			"random_state": self.config_data.get("random_state", 42),
+			"test_ratio": self.config_data.get("test_ratio", 0.2),
 		}
 
-		step1_data = cls.config_data.get("Step1", {})
+		step1_data = self.config_data.get("Step1", {})
 		vec_data = step1_data.get("vectorizer", {})
 		tfidf_data = vec_data.get("TF-IDF", {})
 		bow_data = vec_data.get("BoW", {})
@@ -94,8 +166,11 @@ class ConfigLoader:
 			max_features= bow_data.get("max_features", None),
 		)
 
-		return Step1Config(
+		return StepConfig(
+			config_path		= self.config_path,
+			data			= step1_data,
 			result_dir		= general["result_dir"],
+			static_dir		= general["static_dir"],
 			random_state	= general["random_state"],
 			test_ratio		= general["test_ratio"],
 			tf_idf			= tf_idf_config,

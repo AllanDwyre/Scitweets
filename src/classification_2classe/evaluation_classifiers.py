@@ -1,4 +1,3 @@
-from utils.result_helper import display_result
 from utils.helper import ConfigLoader, print_color
 
 from sklearn.metrics import classification_report, precision_recall_fscore_support, accuracy_score, confusion_matrix
@@ -23,34 +22,16 @@ class ClassifierEvaluation:
 		self.y_test = y_test
 
 		self.classifiers = {
-			'Régression Logistique': LogisticRegression(
-				# max_iter=config['model_params']['classifiers']['logistic_regression']['max_iter'], 
-				# C=config['model_params']['classifiers']['logistic_regression']['C'], 
-				# class_weight=config['model_params']['classifiers']['logistic_regression']['class_weight']
-			),
+			'Régression Logistique': LogisticRegression(),
 			'Naive Bayes': MultinomialNB(),
-			'SVM Linéaire': LinearSVC(
-				# C=config['model_params']['classifiers']['svm']['C'], 
-				# class_weight=config['model_params']['classifiers']['svm']['class_weight'], 
-				# dual=config['model_params']['classifiers']['svm']['dual'], 
-				# max_iter=config['model_params']['classifiers']['svm']['max_iter']
-			),
-			'Random Forest': RandomForestClassifier(
-				# n_estimators=config['model_params']['classifiers']['random_forest']['n_estimators'], 
-				# class_weight=config['model_params']['classifiers']['random_forest']['class_weight'], 
-				# random_state=config['model_params']['random_state']
-			),
-			'Decision Tree': DecisionTreeClassifier(
-				# class_weight=config['model_params']['classifiers']['decision_tree']['class_weight'], 
-				# random_state=config['model_params']['random_state']
-			),
-			'KNN': KNeighborsClassifier(
-				# n_neighbors=config['model_params']['classifiers']['knn']['n_neighbors']
-			)
+			'SVM Linéaire': LinearSVC(),
+			'Random Forest': RandomForestClassifier(),
+			'Decision Tree': DecisionTreeClassifier(),
+			'KNN': KNeighborsClassifier()
 		}
 		self.vectoriser = {
-			"TF-IDF" : self.config.get_tf_id(),
-			"Bag of words" : self.config.get_bow()
+			"TF-IDF" : self.config.get_default_tf_id(),
+			"Bag of words" : self.config.get_default_bow()
 		}
 	
 	def evaluate(self):
