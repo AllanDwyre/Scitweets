@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import math
+
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer, make_column_selector
+
 # Classifieurs
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
@@ -19,11 +23,12 @@ from sklearn.preprocessing import StandardScaler
 
 
 class ClassifierEvaluation:
-	def __init__(self, X, y):
+	def __init__(self, X, y, keyword_extractor):
 		self.config = ConfigLoader.load_step1()
 
 		self.X = X
 		self.y = y
+		self.keyword_extractor = keyword_extractor
 
 		self.classifiers = {
 			'Régression Logistique': LogisticRegression(random_state=self.config.random_state),
@@ -59,18 +64,21 @@ class ClassifierEvaluation:
 
 				print_color(f"Evaluation de {name} avec {vectoriser_name}", "info")
 
-				X_text = vectoriser.fit_transform(self.X["text"])
-				X_numeric = self.X.select_dtypes(include='number')
+				preprocessor = ColumnTransformer([
+					("text", vectoriser, "text"),
+					("numeric", 
+						(StandardScaler() if name not in self.not_scaling else "passthrough"),
+						make_column_selector(dtype_include="number")
+					)
+				])
 
-				if name in self.not_scaling:
-					X_numeric_scaled = X_numeric.values
-				else:
-					scaler = StandardScaler()
-					X_numeric_scaled = scaler.fit_transform(X_numeric)
+				pipeline = Pipeline([
+					("add_keywords", self.keyword_extractor),
+					("preprocessing", preprocessor),
+					("clf", classifier)
+				])
 
-				X_combined = hstack([X_text, X_numeric_scaled])
-
-				y_pred_cv = cross_val_predict(classifier, X_combined, self.y, cv=5)
+				y_pred_cv = cross_val_predict(pipeline, self.X, self.y, cv=5)
 				cm = confusion_matrix(self.y, y_pred_cv)
 
 
@@ -87,8 +95,8 @@ class ClassifierEvaluation:
 				plot_idx += 1
 
 				cv_results = cross_validate(
-					classifier, 
-					X_combined, 
+					pipeline,
+					self.X,
 					self.y,
 					cv=5,
 					scoring=['accuracy', 'precision_macro', 'recall_macro', 'f1_macro']
@@ -119,11 +127,11 @@ class ClassifierEvaluation:
 		plt.tight_layout()
 		plt.show()
 
-		results_df = pd.DataFrame(all_results)
-		results_df = results_df.sort_values(by="F1 Mean", ascending=False)
+		classement_df = pd.DataFrame(all_results)
+		classement_df = classement_df.sort_values(by="F1 Mean", ascending=False)
 
-		results_df["F1 Mean"] = results_df["F1 Mean"].apply(lambda x : float(f"{x:.3f}"))
-		results_df["F1 Std"] = results_df["F1 Std"].apply(lambda x : float(f"{x:.3f}"))
+		classement_df["F1 Mean"] = classement_df["F1 Mean"].apply(lambda x : float(f"{x:.3f}"))
+		classement_df["F1 Std"] = classement_df["F1 Std"].apply(lambda x : float(f"{x:.3f}"))
 
-		return all_results, results_df
+		return all_results, classement_df
 			

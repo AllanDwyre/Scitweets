@@ -34,17 +34,17 @@ def save_result(title: str, description: str, fig: plt.Figure, output_dir: str =
 	print(f"✅ Results saved to: {output_dir}")
 
 
-def display_result(predicted_y, true_y):
+def display_result(predicted_y, true_y, yticklabels = ['Non science related', 'Science related']):
 	fig, axes = plt.subplots(1, 2, figsize=(12, 6))
 	cm = confusion_matrix(true_y, predicted_y)
-	sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=["Non science related", "Science related"],
-			yticklabels=["Non science related", "Science related"], ax=axes[0])
+	sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=yticklabels,
+			yticklabels= yticklabels, ax=axes[0])
 
 	axes[0].set_xlabel("Predicted Label")
 	axes[0].set_ylabel("True Label")
 	axes[0].set_title("Confusion Matrix")
 
-	target_names = ['Non science related', 'Science related']
+	target_names = yticklabels
 	class_report = classification_report(true_y, predicted_y, labels=[0, 1], target_names=target_names)
 
 	axes[1].text(0, 0.5, class_report, fontsize=12, family='monospace')

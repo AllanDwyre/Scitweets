@@ -22,6 +22,7 @@ def print_color(text: str, type: str) -> None:
 
 from dataclasses import dataclass, field
 from typing import Optional, Tuple, Dict, Any
+from collections import defaultdict
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 import json
 import os
@@ -39,6 +40,7 @@ class VectorizerConfig:
 
 @dataclass
 class Model:
+	name		: str
 	data		: Dict[str, Any]
 
 	def get_config(self, config_name):
@@ -61,14 +63,27 @@ class Model:
 @dataclass
 class StepConfig:
 	config_path	: str
-	data		: Dict[str, Any]
+	step_name	: str
 	result_dir	: str
 	static_dir	: str
 	random_state: int
 	test_ratio	: float
 	tf_idf		: VectorizerConfig
 	bow			: VectorizerConfig
+	saved_data	: dict[str, dict] = field(default_factory=lambda: defaultdict(dict))
 
+	@property
+	def data(self) -> Dict[str, Any]:
+		with open(self.config_path, 'r') as f:
+			full_config = json.load(f)
+			self.saved_data = full_config.get(self.step_name, {})
+		return self.saved_data
+	
+	def is_multi_label(self):
+		return bool(self.data.get("multi_label", 0))
+
+	def get_type(self):
+		return "Multi-Label" if self.is_multi_label() else "Binary"
 
 	def get_model(self, model_name) -> Model | None:
 		model_data = self.data.get("models").get(model_name)
@@ -76,9 +91,11 @@ class StepConfig:
 			print_color("No model of this name found", "warning")
 			return None
 		
-		return Model(data=model_data)
+		return Model(data=model_data, name=model_name)
 	
 	def save_model(self, model_name: str, flat_model_data: Dict[str, Any]):
+		_ = self.data # refresh the saved_data to the lastest
+
 		# * 1. Conversion du flat a structurer
 		ngram_map = {
 			'unigram': "(1, 1)",
@@ -102,18 +119,18 @@ class StepConfig:
 		model_params["vectorizer"] = vectorizer_data
 
 		# * 2. Introduction du nouveau model dans la structure local (Step1)
-		if "models" not in self.data:
-			self.data["models"] = {}
+		if "models" not in self.saved_data:
+			self.saved_data["models"] = {}
 
-		self.data["models"][model_name] = model_params
+		self.saved_data["models"][model_name] = model_params
 
 		# * 3. Introduction du nouveau model dans la structure global (fulljson)
 		with open(self.config_path, 'r') as f:
 			full_config = json.load(f)
 
-		if "Step1" not in full_config:
-			full_config["Step1"] = {}
-		full_config["Step1"]["models"] = self.data["models"]
+		if self.step_name not in full_config:
+			full_config[self.step_name] = {}
+		full_config[self.step_name]["models"] = self.saved_data["models"]
 
 		# * 4. On réecrit tout le fichier pour save le model
 		with open(self.config_path, 'w') as f:
@@ -138,19 +155,18 @@ class ConfigLoader:
 				cls.config_data = json.load(f)
 		else:
 			raise FileNotFoundError(f"Config file not found at {cls.config_path}")
-
 	@classmethod
-	def load_step1(self) -> StepConfig:
-		self.load_json()
+	def _load_step(cls, step_name):
+		cls.load_json()
 
 		general = {
-			"result_dir": self.config_data.get("result_dir", "results"),
-			"static_dir": self.config_data.get("static_dir", "static"),
-			"random_state": self.config_data.get("random_state", 42),
-			"test_ratio": self.config_data.get("test_ratio", 0.2),
+			"result_dir": cls.config_data.get("result_dir", "results"),
+			"static_dir": cls.config_data.get("static_dir", "static"),
+			"random_state": cls.config_data.get("random_state", 42),
+			"test_ratio": cls.config_data.get("test_ratio", 0.2),
 		}
 
-		step1_data = self.config_data.get("Step1", {})
+		step1_data = cls.config_data.get(step_name, {})
 		vec_data = step1_data.get("vectorizer", {})
 		tfidf_data = vec_data.get("TF-IDF", {})
 		bow_data = vec_data.get("BoW", {})
@@ -167,8 +183,8 @@ class ConfigLoader:
 		)
 
 		return StepConfig(
-			config_path		= self.config_path,
-			data			= step1_data,
+			config_path		= cls.config_path,
+			step_name		= step_name,
 			result_dir		= general["result_dir"],
 			static_dir		= general["static_dir"],
 			random_state	= general["random_state"],
@@ -176,16 +192,18 @@ class ConfigLoader:
 			tf_idf			= tf_idf_config,
 			bow				= bow_config,
 		)
+	
+	@classmethod
+	def load_step1(cls) -> StepConfig:
+		return cls._load_step("Step1")
 
-	@staticmethod
-	def load_step2():
-		# Implémentation future
-		pass
+	@classmethod
+	def load_step2(cls) -> StepConfig:
+		return cls._load_step("Step2")
 
-	@staticmethod
-	def load_step3():
-		# Implémentation future
-		pass
+	@classmethod
+	def load_step3(cls):
+		cls._load_step("Step3")
 
 
 # Exemple d'utilisation :
