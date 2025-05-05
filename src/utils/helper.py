@@ -81,10 +81,11 @@ class StepConfig:
 	def save_model(self, model_name: str, flat_model_data: Dict[str, Any]):
 		# * 1. Conversion du flat a structurer
 		ngram_map = {
-			'unigram': (1, 1),
-			'bigram': (1, 2),
-			'trigram': (1, 3),
-			'quadrugram': (1, 4)
+			'unigram': "(1, 1)",
+			'bigram': "(1, 2)",
+			'trigram': "(1, 3)",
+			'quadrugram': "(1, 4)",
+			"bigram_only": "(2, 2)",
 		}
 		vectorizer_keys = {"ngram_range", "min_df", "max_features"}
 		vectorizer_data = {}
@@ -93,8 +94,7 @@ class StepConfig:
 		for key, value in flat_model_data.items():
 			if key in vectorizer_keys:
 				if key == "ngram_range":
-					# Convertir en tuple via mapping
-					value = ngram_map.get(value, (1, 1))
+					value = ngram_map.get(value, "(1, 1)")
 				vectorizer_data[key] = value
 			else:
 				model_params[key] = value
