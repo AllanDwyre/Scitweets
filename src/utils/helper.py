@@ -153,7 +153,7 @@ class StepConfig:
 		
 class ConfigLoader:
 	config_data: Dict[str, Any] = {}
-	config_path: str = "../../config.json"
+	config_path: str = "../config.json"
 
 	@classmethod
 	def load_json(cls):
