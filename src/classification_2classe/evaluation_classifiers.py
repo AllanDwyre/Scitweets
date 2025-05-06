@@ -111,7 +111,8 @@ class ClassifierEvaluation:
 					"F1 Mean": f1_mean,
 					"F1 Std": f1_std
 				})
-
+				
+			
 				# accuracy = accuracy_score(self.y_test, y_pred)
 				# precision, recall, f1, _ = precision_recall_fscore_support(self.y_test, y_pred, average='macro')
 

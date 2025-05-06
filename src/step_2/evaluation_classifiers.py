@@ -23,8 +23,9 @@ from sklearn.preprocessing import StandardScaler
 
 
 class ClassifierEvaluation:
-	def __init__(self, X, y, keyword_extractor):
-		self.config = ConfigLoader.load_step1()
+	def __init__(self, X, y, keyword_extractor, config, ticklabels):
+		self.config = config
+		self.ticklabels = ticklabels
 
 		self.X = X
 		self.y = y
@@ -85,7 +86,7 @@ class ClassifierEvaluation:
 				ax = axes[plot_idx]
 
 				sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-							xticklabels=["Non science related", "Science related"], yticklabels=["Non science related", "Science related"],
+							xticklabels= self.ticklabels, yticklabels= self.ticklabels,
 							ax=ax)
 
 				ax.set_title(f'{name} + {vectoriser_name}')

@@ -59,7 +59,14 @@ class Model:
 		if(vectorizer.get("vector_type") == "BoW"):
 			return CountVectorizer(ngram_range = ngrams, max_features = max_features)
 		return TfidfVectorizer(ngram_range = ngrams, max_features = max_features)
-
+	
+	def get_vectorizer_name(self) -> str:
+		vectorizer : Dict[str, Any] = self.data.get("vectorizer")
+		if not vectorizer:
+			print_color("No vectorizer found", "warning")
+			return "None"
+		return vectorizer.get("vector_type", "None")
+	
 @dataclass
 class StepConfig:
 	config_path	: str
@@ -135,6 +142,8 @@ class StepConfig:
 		# * 4. On réecrit tout le fichier pour save le model
 		with open(self.config_path, 'w') as f:
 			json.dump(full_config, f, indent=4)
+		
+		print_color(f"Model ({model_name}) saved in config file", "success")
 
 	def get_default_bow(self):
 		return CountVectorizer(ngram_range = self.tf_idf.ngrams, max_features = self.tf_idf.max_features)
