@@ -1,9 +1,9 @@
 # Rapport du RandomForest
-**Date**: 2025-05-06_12-17-57
+**Date**: 2025-05-06_20-02-03
 
 ## Description
 Ce graphique montre le résultats hyperparamètrique avec optuna
- ## Résultat : 0.702±0.077
+ ## Résultat : 0.736±0.065
 
 ## Visualisation
-![Rapport du RandomForest](../../static/images/rapport_du_randomforest_plot.png)
+![Rapport du RandomForest](../static/images/rapport_du_randomforest_plot.png)

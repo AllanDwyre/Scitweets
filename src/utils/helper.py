@@ -48,11 +48,15 @@ class Model:
 	def get_vectorizer(self):
 		vectorizer : Dict[str, Any] = self.data.get("vectorizer")
 		vectorizer_type : Dict[str, Any] = self.data.get("vectorizer_type")
-
+		
 		if not vectorizer:
 			print_color("No vectorizer found", "warning")
 			return None
 		
+		vectorizer_type : Dict[str, Any] = vectorizer.get("vectorizer_type")
+		if not vectorizer_type:
+			print_color("vectorizer : type not found", "warning")
+
 		ngrams = parse_ngram_range(vectorizer.get("ngram_range", "(1,2)"))
 		max_features = vectorizer.get("max_features", 1000)
 
