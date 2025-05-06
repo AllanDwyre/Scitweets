@@ -5,6 +5,8 @@ seaborn
 plotly
 matplotlib
 
+
+imblearn
 scikit-learn
 nltk
 spacy

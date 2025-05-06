@@ -1,4 +1,11 @@
 import spacy
+from dataclasses import dataclass, field
+from typing import Optional, Tuple, Dict, Any
+from collections import defaultdict
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+import json
+import os
+
 
 def load_nlp_model() -> spacy.Language:
 	try:
@@ -20,14 +27,6 @@ def print_color(text: str, type: str) -> None:
 	start_color, icon = types.get(type, ("", ""))
 	print(icon, f"{start_color}{text}{reset}")
 
-from dataclasses import dataclass, field
-from typing import Optional, Tuple, Dict, Any
-from collections import defaultdict
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-import json
-import os
-
-
 def parse_ngram_range(ngram_str: str) -> Tuple[int, int]:
 	"""Converts a string like "(1,2)" to a tuple (1, 2)"""
 	return tuple(map(int, ngram_str.strip("() ").split(",")))
@@ -48,6 +47,7 @@ class Model:
 		
 	def get_vectorizer(self):
 		vectorizer : Dict[str, Any] = self.data.get("vectorizer")
+		vectorizer_type : Dict[str, Any] = self.data.get("vectorizer_type")
 
 		if not vectorizer:
 			print_color("No vectorizer found", "warning")
@@ -56,7 +56,7 @@ class Model:
 		ngrams = parse_ngram_range(vectorizer.get("ngram_range", "(1,2)"))
 		max_features = vectorizer.get("max_features", 1000)
 
-		if(vectorizer.get("vector_type") == "BoW"):
+		if(vectorizer_type == "bow"):
 			return CountVectorizer(ngram_range = ngrams, max_features = max_features)
 		return TfidfVectorizer(ngram_range = ngrams, max_features = max_features)
 	
@@ -65,7 +65,7 @@ class Model:
 		if not vectorizer:
 			print_color("No vectorizer found", "warning")
 			return "None"
-		return vectorizer.get("vector_type", "None")
+		return vectorizer.get("vectorizer_type", "None")
 	
 @dataclass
 class StepConfig:
@@ -111,7 +111,7 @@ class StepConfig:
 			'quadrugram': "(1, 4)",
 			"bigram_only": "(2, 2)",
 		}
-		vectorizer_keys = {"ngram_range", "min_df", "max_features"}
+		vectorizer_keys = {"ngram_range", "min_df", "max_features", "vectorizer_type"}
 		vectorizer_data = {}
 		model_params = {}
 
@@ -151,8 +151,6 @@ class StepConfig:
 	def get_default_tf_id(self):
 		return TfidfVectorizer(ngram_range = self.tf_idf.ngrams, max_features = self.tf_idf.max_features)
 		
-
-
 class ConfigLoader:
 	config_data: Dict[str, Any] = {}
 	config_path: str = "../../config.json"
@@ -212,18 +210,4 @@ class ConfigLoader:
 
 	@classmethod
 	def load_step3(cls):
-		cls._load_step("Step3")
-
-
-# Exemple d'utilisation :
-if __name__ == "__main__":
-	import pprint
-
-	try:
-		step1 = ConfigLoader.load_step1()
-		pprint.pprint(step1)
-
-		tfidf = step1.vectorizer.get_tf_idf()
-		print(tfidf)
-	except Exception as e:
-		print(f"Erreur lors du chargement de la configuration : {e}")
+		return cls._load_step("Step3")
