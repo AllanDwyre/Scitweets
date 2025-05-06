@@ -32,11 +32,11 @@ class ClassifierEvaluation:
 		self.keyword_extractor = keyword_extractor
 
 		self.classifiers = {
-			'Régression Logistique': LogisticRegression(random_state=self.config.random_state),
+			'Régression Logistique': LogisticRegression(random_state=self.config.random_state, class_weight='balanced'),
 			'Naive Bayes': MultinomialNB(),
-			'SVM Linéaire': LinearSVC(random_state=self.config.random_state),
-			'Random Forest': RandomForestClassifier(random_state=self.config.random_state),
-			'Decision Tree': DecisionTreeClassifier(random_state=self.config.random_state),
+			'SVM Linéaire': LinearSVC(random_state=self.config.random_state, class_weight='balanced'),
+			'Random Forest': RandomForestClassifier(random_state=self.config.random_state, class_weight='balanced'),
+			'Decision Tree': DecisionTreeClassifier(random_state=self.config.random_state, class_weight='balanced'),
 			'KNN': KNeighborsClassifier(),
 			'xgboost' : XGBClassifier(random_state=self.config.random_state)
 		}
