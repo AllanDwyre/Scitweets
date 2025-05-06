@@ -44,8 +44,7 @@ def display_result(predicted_y, true_y, yticklabels = ['Non science related', 'S
 	axes[0].set_ylabel("True Label")
 	axes[0].set_title("Confusion Matrix")
 
-	target_names = yticklabels
-	class_report = classification_report(true_y, predicted_y, labels=[0, 1], target_names=target_names)
+	class_report = classification_report(true_y, predicted_y, labels=[i for i in range(len(yticklabels))], target_names=yticklabels)
 
 	axes[1].text(0, 0.5, class_report, fontsize=12, family='monospace')
 	axes[1].axis("off")
