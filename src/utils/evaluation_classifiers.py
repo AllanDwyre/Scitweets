@@ -7,8 +7,6 @@ import seaborn as sns
 import pandas as pd
 import math
 
-# from imblearn.over_sampling import RandomOverSampler
-# from imblearn.pipeline import Pipeline as ImbPipeline
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer, make_column_selector
 
